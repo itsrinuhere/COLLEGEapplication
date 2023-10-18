@@ -1,6 +1,7 @@
 package com.example.project.controller;
 
 import com.example.project.Services.FacultyServices;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,26 +20,32 @@ public class FacultyController {
     }
     @PostMapping("faculty/{id}")
     ResponseEntity<Object> saveSubFaculty(@RequestBody HashMap<String,Object> map, @PathVariable String id){
-       int res = -1;
-       System.out.println(map.get("userid"));
-        try{
-            switch (id) {
-                case "social" -> {
-                    res = fs.saveSocialLinks(map);
+        int res = -1;
+        if(map.get("userid")!=null && fs.isFacultyInTable((String)map.get("userid"))){
+            try{
+                switch (id) {
+                    case "social" -> {
+                        res = fs.saveSocialLinks(map);
+                    }
+                    case "recent" -> {
+                        res = fs.saveResearchPapers(map);
+                    }
+                    case "experience" -> {
+                        res=fs.saveExperience(map);//tested
+                    }
+                    default->{
+                        return  new ResponseEntity<>("URL undefined",HttpStatus.BAD_REQUEST);
+                    }
                 }
-                case "recent" -> {
-
-                    res = fs.saveResearchPapers(map);
-                }
-                case "experience" -> {
-                    res=fs.saveExperience(map);
-                }
+            }catch(Exception e){
+                System.out.println(e.getMessage());
+                return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
             }
-        }catch(Exception e){
-            System.out.println(e.getMessage());
-            return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
+            return new ResponseEntity<>(res==1?HttpStatus.CREATED:HttpStatus.CONFLICT);
+        }else{
+            return  new ResponseEntity<>("{msg:'userid required'}",HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(res==1?HttpStatus.CREATED:HttpStatus.CONFLICT);
+
     }
     @GetMapping("/faculty")
     ResponseEntity<Object> getAllFaculty() {
@@ -46,10 +53,40 @@ public class FacultyController {
         return new ResponseEntity<>( fs.getAllFaculty(),HttpStatus.OK);
     }
     @GetMapping("/faculty/{id}")
-    ResponseEntity<Object> getFacultyById(@PathVariable String id){
-        return new ResponseEntity<>(HttpStatus.OK);
+    ResponseEntity<Object> getsFacultyData(@PathVariable String id){
+        String sql ="select * from ";
+        switch(id){
+            case "social"->{
+                sql+="sociallinks";
+            }case "experience"->{
+                sql+="experience";
+            }case "recent"->{
+                sql+="recenteducation";
+            }default -> {
+                return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
+            }
+        }
+        return new ResponseEntity<>(fs.getAllSubData(sql),HttpStatus.OK);
     }
-//    ResponseEntity<Object> getFacultsByDoctorates(){
-//
-//    }
+    @GetMapping("/faculty/{id}/{userid}")
+    ResponseEntity<Object> getFacultyDataByI(@PathVariable String id,@PathVariable String userid){
+        if(userid!=null && fs.isFacultyInTable(userid)){
+            String sql ="select * from ";
+            switch(id){
+                case "social"->{
+                    sql+="sociallinks where userid=?";
+                }case "experience"->{
+                    sql+="experience where userid =?";
+                }case "recent"->{
+                    sql+="recenteducation where userid=?";
+                }default -> {
+                    return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
+                }
+            }
+            return new ResponseEntity<>(fs.getSubColumndata(sql,userid),HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
+
+    }
 }
