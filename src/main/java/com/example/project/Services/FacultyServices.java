@@ -61,9 +61,8 @@ public class FacultyServices {
         }
         return dataS;
     }
-
-    public Object getSubColumndata(String sql, String userid) {
-        List<Map<String,Object>> dataS= jt.queryForList(sql,userid);
+    public Object getData(String sql,@NotNull String ... args){
+        List<Map<String,Object>> dataS= jt.queryForList(sql, args);
         if(dataS.isEmpty()){
             return new ArrayList<>();
         }

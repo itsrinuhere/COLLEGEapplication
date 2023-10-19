@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
@@ -28,4 +30,10 @@ void testSocialData(){
 		map.put("linkedin","");
 		assertEquals(fs.saveSocialLinks(map),1);;
 }
+@Test
+	void testttt(){
+		List<HashMap<String,Object>> mp = (List<HashMap<String, Object>>) fs.getData("select * from faculty userid=?","123456789a");
+
+		assertEquals(1,1);
+	}
 }

@@ -1,13 +1,12 @@
 package com.example.project.controller;
 
 import com.example.project.Services.FacultyServices;
-import org.jetbrains.annotations.NotNull;
+import jakarta.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
-import java.util.Set;
 
 @RestController
 @RequestMapping("api")
@@ -69,8 +68,8 @@ public class FacultyController {
         return new ResponseEntity<>(fs.getAllSubData(sql),HttpStatus.OK);
     }
     @GetMapping("/faculty/{id}/{userid}")
-    ResponseEntity<Object> getFacultyDataByI(@PathVariable String id,@PathVariable String userid){
-        if(userid!=null && fs.isFacultyInTable(userid)){
+    ResponseEntity<Object> getFacultyDataByI(@PathVariable String id,@PathVariable String userid,@Nullable @RequestParam String q){
+        if(q==null&&userid!=null && fs.isFacultyInTable(userid)){
             String sql ="select * from ";
             switch(id){
                 case "social"->{
@@ -83,10 +82,22 @@ public class FacultyController {
                     return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
                 }
             }
-            return new ResponseEntity<>(fs.getSubColumndata(sql,userid),HttpStatus.OK);
+            return new ResponseEntity<>(fs.getData(sql,userid),HttpStatus.OK);
+        }else if(q!=null&&userid!=null && fs.isFacultyInTable(userid)){//tested by warnings casting required
+            String sql ="select * from ";
+            switch(id){
+                case "social"->{
+                    sql+="sociallinks where userid=? and socialid=?";
+                }case "experience"->{
+                    sql+="experience where userid =? and experienceid=?";
+                }case "recent"->{
+                    sql+="recenteducation where userid=? and recentid=?";
+                }default -> {
+                    return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
+                }
+            }
+            return new ResponseEntity<>(fs.getData(sql,userid,q),HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-
-
     }
 }
